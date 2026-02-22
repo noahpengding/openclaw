@@ -116,6 +116,7 @@ ENV HOMEBREW_PREFIX=/home/linuxbrew/.linuxbrew
 ENV PATH="${HOMEBREW_PREFIX}/bin:${HOMEBREW_PREFIX}/sbin:${PATH}"
 ENV NODE_USE_SYSTEM_CA=1
 
+RUN npm install -g @google/gemini-cli
 ENV NODE_ENV=production
 
 # Security hardening: Run as non-root user
