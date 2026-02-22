@@ -1,19 +1,16 @@
 services:
   openclaw-gateway:
-    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        OPENCLAW_INSTALL_BROWSER: 1
     environment:
       HOME: /home/node
       TERM: xterm-256color
-      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
-      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY}
-      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
-      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE}
     volumes:
-      - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
-      - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
-    ports:
-      - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
-      - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
+      - /docker/clawdbot/config:/home/node/.openclaw/config
+      - /docker/clawdbot/workspace:/home/node/.openclaw/workspace
     init: true
     restart: unless-stopped
     command:
@@ -26,21 +23,9 @@ services:
         "--port",
         "18789",
       ]
-
-  openclaw-cli:
-    image: ${OPENCLAW_IMAGE:-openclaw:local}
-    environment:
-      HOME: /home/node
-      TERM: xterm-256color
-      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
-      BROWSER: echo
-      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY}
-      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
-      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE}
-    volumes:
-      - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
-      - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
-    stdin_open: true
-    tty: true
-    init: true
-    entrypoint: ["node", "dist/index.js"]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.clawdbot.rule=Host(`clawdbot.tenawalcott.com`)
+      - traefik.http.routers.clawdbot.entrypoints=websecure
+      - treafik.http.routers.clawdbot.service=clawdbot
+      - traefik.http.services.clawdbot.loadbalancer.server.port=18789
